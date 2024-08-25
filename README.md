@@ -1,4 +1,4 @@
-# Vue 3 + Vite
+# Vue 3 + Vite + Tailwind + Papaparse
 
 ## To run locally
 ### cd vue-csv-reader
