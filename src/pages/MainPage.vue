@@ -4,12 +4,16 @@
     <input id="file-reader" type="file" @change="showFile" />
     <div
       class="flex flex-col gap-5 justify-center overflow-x-scroll"
-      v-if="data"
+      v-if="state.data"
     >
       <div class="flex flex-row gap-5 self-end">
         <div class="flex flex-row gap-2">
           <span>Строк на странице: </span>
-          <select v-model="rowsPerPage" name="rowsPerPage" id="rowsPerPage">
+          <select
+            v-model="state.rowsPerPage"
+            name="rowsPerPage"
+            id="rowsPerPage"
+          >
             <option selected value="5">5</option>
             <option value="10">10</option>
             <option value="20">20</option>
@@ -19,11 +23,13 @@
         <span
           >{{
             Math.ceil(
-              (startPositionRow + Number(rowsPerPage) / Number(rowsPerPage)) /
-                Number(rowsPerPage)
+              (state.startPositionRow +
+                Number(state.rowsPerPage) / Number(state.rowsPerPage)) /
+                Number(state.rowsPerPage)
             )
           }}
-          из {{ Math.ceil(data.length / Number(rowsPerPage)) }}</span
+          из
+          {{ Math.ceil(state.data.length / Number(state.rowsPerPage)) }}</span
         >
         <div class="flex flex-row gap-5">
           <button @click="handleMinusClick">
@@ -65,7 +71,10 @@
           <tr>
             <th
               class="border border-slate-300"
-              v-for="element in headers.slice(0, limitOfElementsInRow)"
+              v-for="element in state.headers.slice(
+                0,
+                state.limitOfElementsInRow
+              )"
               :key="element"
             >
               {{ element }}
@@ -75,14 +84,14 @@
         <tbody>
           <tr
             class="bg-slate-300"
-            v-for="dataRow in data.slice(
-              startPositionRow,
-              startPositionRow + Number(rowsPerPage)
+            v-for="dataRow in state.data.slice(
+              state.startPositionRow,
+              state.startPositionRow + Number(state.rowsPerPage)
             )"
             :key="dataRow"
           >
             <td
-              v-for="element in dataRow.slice(0, limitOfElementsInRow)"
+              v-for="element in dataRow.slice(0, state.limitOfElementsInRow)"
               :key="element"
             >
               {{ element }}
@@ -96,49 +105,42 @@
 
 <script setup>
 import Papa from "papaparse";
+import { reactive } from "vue";
 
-import { ref } from "vue";
-
-const file = ref(null);
-
-const data = ref(null);
-
-const headers = ref(null);
-
-const rowsPerPage = ref(5);
-
-const limitOfElementsInRow = 5;
-
-const startPositionRow = ref(0);
-
-const limitOfElementsInColumn = ref(20);
+const state = reactive({
+  file: null,
+  data: null,
+  headers: null,
+  rowsPerPage: 5,
+  limitOfElementsInRow: 5,
+  startPositionRow: 0,
+});
 
 const showFile = (e) => {
   let file = e.target.files[0];
-  if (file.name.split(".").pop() != "csv") {
+  if (file.name.split(".").pop() !== "csv") {
     alert("Неверный файл");
     document.getElementById("file-reader").value = null;
   } else {
-    //alert(`File name: ${file.name} \nFile size: ${file.size} bytes`);
     Papa.parse(file, {
       complete: function (results) {
         console.log(results);
-        headers.value = results.data[0];
-        data.value = results.data.slice(1);
+        state.headers = results.data[0];
+        state.data = results.data.slice(1);
       },
     });
   }
 };
 
 const handlePlusClick = () => {
-  startPositionRow.value = startPositionRow.value + Number(rowsPerPage.value);
+  state.startPositionRow += Number(state.rowsPerPage);
 };
 
 const handleMinusClick = () => {
-  if (startPositionRow.value - Number(rowsPerPage.value) > 0) {
-    startPositionRow.value = startPositionRow.value - Number(rowsPerPage.value);
+  if (state.startPositionRow - Number(state.rowsPerPage) > 0) {
+    state.startPositionRow -= Number(state.rowsPerPage);
   } else {
-    startPositionRow.value = 0;
+    state.startPositionRow = 0;
   }
 };
 </script>
